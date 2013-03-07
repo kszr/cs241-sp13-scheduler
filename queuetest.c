@@ -37,11 +37,9 @@ int main()
 	priqueue_offer(&q, &values[12]);
 	priqueue_offer(&q, &values[12]);
 	printf("Total elements: %d (expected 5).\n", priqueue_size(&q));
-
 	int val = *((int *)priqueue_poll(&q));
 	printf("Top element: %d (expected 12).\n", val);
 	printf("Total elements: %d (expected 4).\n", priqueue_size(&q));
-
 	int vals_removed = priqueue_remove(&q, &values[12]);
 	printf("Elements removed: %d (expected 2).\n", vals_removed);
 	printf("Total elements: %d (expected 2).\n", priqueue_size(&q));
