@@ -19,7 +19,10 @@
  */
 void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
-
+	//q = (priqueue_t *) malloc(sizeof(priqueue_t));
+	q->head = NULL;
+	q->size = 0;
+	q->comparitor = comparer;
 }
 
 
@@ -32,7 +35,53 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-	return -1;
+	//The latest entry, named ironically after the oldest man in the Bible.
+	entry_t *methuselah = (entry_t *) malloc(sizeof(entry_t));
+	methuselah->data = ptr;
+
+	q->size++;
+
+	//If the queue is empty;
+	if(!q->head) {
+		q->head = methuselah;
+		methuselah->next = NULL;
+		return methuselah->index = 0;
+	}
+
+	entry_t *curr = q->head;
+	entry_t *prev = NULL;
+	
+	int hathchanged = 0;
+
+	while(curr) {
+		if(!hathchanged && (q->comparitor)(curr->data, methuselah->data) > 0) {
+			//If curr == q->head
+			if(!prev) {
+				q->head = methuselah;
+				methuselah->index = 0;	
+			}
+			else {
+				prev->next = methuselah;
+				methuselah->index = prev->index + 1;
+			}
+			methuselah->next = curr;
+			hathchanged = 1;
+		}
+		if(hathchanged)
+			curr->index++;
+
+		prev = curr;
+		curr = curr->next;
+	}
+	
+	if(!hathchanged) {
+		prev->next = methuselah;
+		methuselah->next = NULL;
+		methuselah->index = prev->index + 1;
+	}
+
+	return methuselah->index;
+
 }
 
 
@@ -46,7 +95,10 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-	return NULL;
+	if(!q->head)
+		return NULL;
+	
+	return q->head->data;
 }
 
 
@@ -60,7 +112,25 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
-	return NULL;
+	if(!q->head)
+		return NULL;
+	
+	void *data = q->head->data;
+
+	entry_t *curr  = q->head->next;
+
+	while(curr) {
+		curr->index--;
+		curr = curr->next;
+	}
+
+	curr = q->head;
+	q->head = q->head->next ? q->head->next : NULL; //I don't know if this check was necessary.
+	
+	free(curr);
+
+	q->size--;
+	return data;
 }
 
 
@@ -75,6 +145,15 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
+	entry_t *curr = q->head;
+
+	while(curr) {
+		if(curr->index == index)
+			return curr->data;
+	
+		curr = curr->next;
+	}
+	
 	return NULL;
 }
 
@@ -89,8 +168,42 @@ void *priqueue_at(priqueue_t *q, int index)
   @return the number of entries removed
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
-{
-	return 0;
+{	
+	entry_t *curr = q->head;
+	entry_t *prev = NULL;
+	int removed = 0;
+
+	if(!q->head) return removed;
+
+	int i;
+	for(i=0; i<priqueue_size(q); i++) {
+		if(ptr == curr->data) {
+			removed++;
+			q->size--;
+			if(!prev) {
+				q->head = curr->next;
+				entry_t *temp = curr;
+				curr = curr->next;
+				free(temp);
+				continue;
+			}
+			prev->next = curr->next;
+			entry_t *temp = curr;
+			curr = prev;
+			free(temp);
+		}
+		prev = curr;
+		curr = curr->next;
+	}
+	//Fixing the indices
+	int index = 0;
+	curr = q->head;
+	while(curr) {
+		curr->index = index++;
+		curr = curr->next;
+	}
+
+	return removed;
 }
 
 
@@ -105,7 +218,33 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-	return 0;
+	entry_t *curr = q->head;
+    entry_t *prev = NULL;
+    int found = 0;
+
+    while(curr && index <= curr->index) {
+        if(curr->index == index) {
+            if(!prev)
+                q->head = curr->next;
+			else prev->next = curr->next;
+            
+			found = 1;
+        }
+
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if(found) {
+        void *data = prev->data;
+        free(prev);
+        while(curr)
+            curr->index--;
+		
+		q->size--;
+        return data;
+    }
+    return NULL;
 }
 
 
@@ -117,7 +256,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
  */
 int priqueue_size(priqueue_t *q)
 {
-	return 0;
+	return q->size;
 }
 
 
@@ -128,5 +267,16 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
+	entry_t *curr = q->head;
+	entry_t *prev = NULL;
 
+	while(curr) {
+		if(prev)
+			free(prev);
+
+		prev = curr;
+		curr = curr->next;
+	}
+
+	free(prev);
 }
