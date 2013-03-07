@@ -19,7 +19,6 @@
  */
 void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
-	//q = (priqueue_t *) malloc(sizeof(priqueue_t));
 	q->head = NULL;
 	q->size = 0;
 	q->comparitor = comparer;
@@ -128,7 +127,7 @@ void *priqueue_poll(priqueue_t *q)
 	q->head = q->head->next ? q->head->next : NULL; //I don't know if this check was necessary.
 	
 	free(curr);
-
+	
 	q->size--;
 	return data;
 }
