@@ -186,7 +186,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             done = (job_t *) priqueue_poll(ugh->thing); //retrieves and removes the head
             free(done); //the job is done
             break; //The core is to remain idle for non-preemptive schemes.
-    case 4:
+    case 2:
     case 4:
     case 5:
     default: break;
