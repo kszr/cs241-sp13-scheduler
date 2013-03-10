@@ -39,7 +39,7 @@ static details_t *ugh = NULL;
 //The comparison function for the priority queue.
 int compare1(const void * a, const void * b)
 {
-  return ( (job_t*)a->priority - (job_t*)b->priority );
+  return ( ((job_t*)a)->priority - ((job_t*)b)->priority );
 }
 
 /**
