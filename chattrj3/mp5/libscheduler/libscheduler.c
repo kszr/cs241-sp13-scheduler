@@ -16,25 +16,40 @@
 */
 typedef struct _job_t
 {
-
+  struct _job_t *next;
+  int job_number;
 } job_t;
 
+//Queue implemented as a linked list.
+
+typedef struct _job_queue_t {
+  job_t *head; //the head of the queue;
+  int cores;
+  scheme_t scheme;
+} queue_t;
+
+static queue_t *job_queue = NULL;
 
 /**
   Initalizes the scheduler.
  
   Assumptions:
     - You may assume this will be the first scheduler function called.
-    - You may assume this function will be called once once.
+    - You may assume this function will be called only once.
     - You may assume that cores is a positive, non-zero number.
     - You may assume that scheme is a valid scheduling scheme.
 
-  @param cores the number of cores that is available by the scheduler. These cores will be known as core(id=0), core(id=1), ..., core(id=cores-1).
-  @param scheme  the scheduling scheme that should be used. This value will be one of the six enum values of scheme_t
+  @param cores the number of cores that is available by the scheduler. 
+  These cores will be known as core(id=0), core(id=1), ..., core(id=cores-1).
+  @param scheme  the scheduling scheme that should be used. This value will be
+   one of the six enum values of scheme_t
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
-
+  job_queue = (queue_t *) malloc(sizeof(queue_t));
+  job_queue->head = NULL;
+  job_queue->cores = cores;
+  job_queue->scheme = scheme;
 }
 
 
