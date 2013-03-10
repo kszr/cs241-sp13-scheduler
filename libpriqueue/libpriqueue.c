@@ -237,8 +237,10 @@ void *priqueue_remove_at(priqueue_t *q, int index)
     if(found) {
         void *data = prev->data;
         free(prev);
-        while(curr)
+        while(curr) {
             curr->index--;
+            curr = curr->next;
+        }
 		
 		q->size--;
         return data;
