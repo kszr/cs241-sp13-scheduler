@@ -32,6 +32,8 @@ typedef struct _details_t {
   scheme_t sch;
   priqueue_t *thing;
   int num_cores;
+  int total_time; //stats
+  int num_jobs; //stats
 } details_t;
 
 static details_t *ugh = NULL;
@@ -73,13 +75,15 @@ void scheduler_start_up(int cores, scheme_t scheme)
   ugh = (details_t *) malloc(sizeof(details_t));
   ugh->thing = (priqueue_t *) malloc(sizeof(priqueue_t));
   ugh->corelist = (int *) malloc(sizeof(int) * (ugh->num_cores = cores));
+  
+  ugh->total_time = ugh->num_jobs = 0;
 
   /**
    * 0 = FCFS
    * 1 = SJF
-   * 2 = PPRI
+   * 2 = PSJF
    * 3 = PRI
-   * 4 = PSJF
+   * 4 = PPRI
    * 5 = RR
    */
   //Different schemes have different notions of priority.
@@ -88,10 +92,12 @@ void scheduler_start_up(int cores, scheme_t scheme)
             break;
     case 1: priqueue_init(ugh->thing, compare1);
             break;
-    case 2:
+    case 2: priqueue_init(ugh->thing, compare1);
+            break;
     case 3: priqueue_init(ugh->thing, compare3);
             break;
-    case 4:
+    case 4: priqueue_init(ugh->thing, compare3);
+            break;
     case 5:
     default: break;
   }
@@ -129,6 +135,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  ugh->num_jobs++;
   int i; //Loop variable
   job_t *job; //New job
   //Actions are determined by the scheme.
@@ -151,10 +158,24 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                           return i; //The id of the core to which job has been assigned.
                         }
                       break; //All cores are busy.
-    case 2 /*PSJF*/ : 
-
-    case 4 /*PPRI*/ :
-
+    case 2 /*PSJF*/ : //PSJF and PPRI should work in the same way.
+    case 4 /*PPRI*/ : //Add job to the queue
+                      job = (job_t *) malloc(sizeof(job_t));
+                      job->job_number = job_number;
+                      job->priority = priority;
+                      job->running_time = running_time;
+                      job->time = time; 
+                      job->is_running = 0; //not being performed by default
+                      priqueue_offer(ugh->thing, job); 
+                      //Look for an idle core
+                      for(i=0; i<ugh->num_cores; i++)
+                        if(!ugh->corelist[i]) {
+                          ugh->corelist[i] = 1; //The core is now in use
+                          job->is_running = 1; //is being performed
+                          return i; //The id of the core to which job has been assigned.
+                        }
+                      //If there are no idle cores, use the power of preemption.
+                      /*SOMETHING*/
     case 5 /*RR*/   :
 
     default         : break;
