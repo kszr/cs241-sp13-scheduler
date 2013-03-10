@@ -91,6 +91,8 @@ void scheduler_start_up(int cores, scheme_t scheme)
     case 2:
     case 3: priqueue_init(ugh->thing, compare3);
             break;
+    case 4:
+    case 5:
     default: break;
   }
 
@@ -177,17 +179,20 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-  job_t *done; //the finished job
-  job_t *next; //the next job.
+  job_t *done //the finished job
+  int index; //the index of the job.
   switch(ugh->sch) {
     case 0: //FCFS, SJF, and PRI react in the same way to death.
     case 1:
     case 3: ugh->corelist[core_id] = 0; //The core is now idle
-            done = (job_t *) priqueue_poll(ugh->thing); //retrieves and removes the head
-            free(done); //the job is done
-            next = (job_t *) priqueue_peek(ugh->thing); //the new head
-            if(next)
-              return next->job_number;
+            for(index = 0; index < priqueue_size(ugh->thing); index++) 
+              if( ((job_t *) (done = priqueue_at(ugh->thing, index)))->job_number == job_number)
+                  break;
+                
+            priqueue_remove_at(ugh->thing, index);
+            free(done);
+           // if(next)
+           //   return next->job_number;
             break;
     case 2:
     case 4:
