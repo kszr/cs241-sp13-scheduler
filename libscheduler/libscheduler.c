@@ -179,7 +179,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-  job_t *done //the finished job
+  job_t *done; //the finished job
   int index; //the index of the job.
   switch(ugh->sch) {
     case 0: //FCFS, SJF, and PRI react in the same way to death.
