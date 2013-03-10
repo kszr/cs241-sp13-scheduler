@@ -177,6 +177,21 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
+  job_t *done; //the finished job
+  job_t *next; //the next job.
+  switch(ugh->scheme) {
+    case 0: //FCFS, SJF, and PRI react in the same way to death.
+    case 1:
+    case 3: corelist[core_id] = 0; //The core is now idle
+            done = (job_t *) priqueue_poll(ugh->thing); //retrieves and removes the head
+            free(done); //the job is done
+            break; //The core is to remain idle for non-preemptive schemes.
+    case 4:
+    case 4:
+    case 5:
+    default: break;
+  }
+
 	return -1;
 }
 
