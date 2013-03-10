@@ -18,17 +18,29 @@ typedef struct _job_t
 {
   struct _job_t *next;
   int job_number;
+  int priority;
+  int running_time;
+  int time;
 } job_t;
 
-//Queue implemented as a linked list.
+/**
+ * Just a collection of variables that would otherwise
+ * have to be declared global individually.
+ */
+typedef struct _details_t {
+  int *corelist; //1 = core[index] is in use; 0 = not in use
+  scheme_t sch;
+  priqueue_t *thing;
+  int num_cores;
+} details_t;
 
-typedef struct _job_queue_t {
-  job_t *head; //the head of the queue;
-  int cores;
-  scheme_t scheme;
-} queue_t;
+static details_t *ugh = NULL;
 
-static queue_t *job_queue = NULL;
+//The comparison function for the priority queue.
+int compare1(const void * a, const void * b)
+{
+  return ( (job_t*)a->priority - (job_t*)b->priority );
+}
 
 /**
   Initalizes the scheduler.
@@ -46,18 +58,25 @@ static queue_t *job_queue = NULL;
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
-  job_queue = (queue_t *) malloc(sizeof(queue_t));
-  job_queue->head = NULL;
-  job_queue->cores = cores;
-  job_queue->scheme = scheme;
+  ugh = (details_t *) malloc(sizeof(details_t));
+  ugh->thing = (priqueue_t *) malloc(sizeof(priqueue_t));
+  ugh->corelist = (int *) malloc(sizeof(int) * (ugh->num_cores = cores));
+
+  priqueue_init(ugh->thing, compare1);
+
+  int i;
+  for(i = 0; i < cores; i++)
+    ugh->corelist[i] = 0; //Every core is initially idle.
+
+  ugh->sch = scheme;
 }
 
 
 /**
   Called when a new job arrives.
  
-  If multiple cores are idle, the job should be assigned to the core with the
-  lowest id.
+  If multiple cores are idle, the job should be assigned to the core with 
+  the lowest id.
   If the job arriving should be scheduled to run during the next
   time cycle, return the zero-based index of the core the job should be
   scheduled on. If another job is already running on the core specified,
@@ -65,16 +84,47 @@ void scheduler_start_up(int cores, scheme_t scheme)
   Assumptions:
     - You may assume that every job wil have a unique arrival time.
 
-  @param job_number a globally unique identification number of the job arriving.
+  @param job_number a globally unique identification number of the job 
+  arriving.
   @param time the current time of the simulator.
-  @param running_time the total number of time units this job will run before it will be finished.
-  @param priority the priority of the job. (The lower the value, the higher the priority.)
+  @param running_time the total number of time units this job will run 
+        before it will be finished.
+  @param priority the priority of the job. (The lower the value, the higher 
+        the priority.)
   @return index of core job should be scheduled on
   @return -1 if no scheduling changes should be made. 
  
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  //Actions determined by scheme
+  switch(ugh->sch) {
+    case 0 /*FCFS*/ : //The same actions are to be taken for all non-preemptive schemes.
+    case 1 /*SJF*/  :
+    case 3 /*PRI*/  : //Look for an idle core.
+                      int i=0;
+                      for(int i=0; i<ugh->num_cores; i++) {
+                        if(!ugh->corelist[i]) {
+                          ugh->corelist[i] = 1; //The core is now in use
+                          job_t *job = (job_t *) malloc(sizeof(job_t));
+                          job->job_number = job_number;
+                          job->priority = priority;
+                          job->running_time = running_time;
+                          job->time = time; 
+                          priqueue_offer(ugh->thing, job);
+                          return i; //The id of the core to which job has been assigned.
+                        }
+                      }
+                      break; //All cores are busy.
+    case 2 /*PSJF*/ : 
+
+    case 4 /*PPRI*/ :
+
+    case 5 /*RR*/   :
+
+    default         : break;
+  }
+
 	return -1;
 }
 
@@ -82,7 +132,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 /**
   Called when a job has completed execution.
  
-  The core_id, job_number and time parameters are provided for convenience. You may be able to calculate the values with your own data structure.
+  The core_id, job_number and time parameters are provided for convenience. 
+  You may be able to calculate the values with your own data structure.
   If any job should be scheduled to run on the core free'd up by the
   finished job, return the job_number of the job that should be scheduled to
   run on core core_id.
