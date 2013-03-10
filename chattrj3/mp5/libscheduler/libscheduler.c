@@ -19,7 +19,7 @@ typedef struct _job_t
   int job_number;
   int priority;
   int running_time;
-  int is_running = 0; //not being performed by default
+  int is_running;
   int time;
 } job_t;
 
@@ -141,6 +141,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                       job->priority = priority;
                       job->running_time = running_time;
                       job->time = time; 
+                      job->is_running = 0; //not being performed by default
                       priqueue_offer(ugh->thing, job); 
                       //Look for an idle core
                       for(i=0; i<ugh->num_cores; i++)
