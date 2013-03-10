@@ -103,7 +103,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     case 1 /*SJF*/  :
     case 3 /*PRI*/  : //Look for an idle core.
                       int i=0;
-                      for(int i=0; i<ugh->num_cores; i++) {
+                      for(i=0; i<ugh->num_cores; i++) {
                         if(!ugh->corelist[i]) {
                           ugh->corelist[i] = 1; //The core is now in use
                           job_t *job = (job_t *) malloc(sizeof(job_t));
