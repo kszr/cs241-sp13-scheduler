@@ -189,11 +189,11 @@ int scheduler_job_finished(int core_id, int job_number, int time)
     case 1:
     case 3: ugh->corelist[core_id] = 0; //The core is now idle
             for(index = 0; index < priqueue_size(ugh->thing); index++) 
-              if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
+              if( (done = (job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
                   break;
                 
-            done = (job_t *) priqueue_remove_at(ugh->thing, index);
-            free(done);
+            priqueue_remove_at(ugh->thing, index);
+            //free(done);
 
             for(index = 0; index < priqueue_size(ugh->thing); index++)
               if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
@@ -207,7 +207,6 @@ int scheduler_job_finished(int core_id, int job_number, int time)
     case 5:
     default: break;
   }
-
 	return -1;
 }
 
