@@ -184,11 +184,3 @@ int main() {
 
 
 }
-
-
-// Prints everything on the queue
-void printqueue(priqueue_t * q) {
-        printf("Printing queue: \n");
-        printnode(q->head, 0);
-        printf("\n");
-}
