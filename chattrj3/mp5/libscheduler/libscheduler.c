@@ -16,11 +16,10 @@
 */
 typedef struct _job_t
 {
-  struct _job_t *next;
   int job_number;
   int priority;
   int running_time;
-  int is_running;
+  int is_running = 0; //not being performed by default
   int time;
 } job_t;
 
@@ -29,7 +28,7 @@ typedef struct _job_t
  * have to be declared global individually.
  */
 typedef struct _details_t {
-  int *corelist; //1 = core[index] is in use; 0 = not in use
+  int *corelist; //1 = corelist[index] is in use; 0 = not in use
   scheme_t sch;
   priqueue_t *thing;
   int num_cores;
@@ -142,7 +141,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                       job->priority = priority;
                       job->running_time = running_time;
                       job->time = time; 
-                      job->is_running = 0; //not being performed
                       priqueue_offer(ugh->thing, job); 
                       //Look for an idle core
                       for(i=0; i<ugh->num_cores; i++)
@@ -196,10 +194,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             priqueue_remove_at(ugh->thing, index);
             free(done);
 
-            for(index = 0; index <priqueue_size(ugh->thing); index++)
+            for(index = 0; index < priqueue_size(ugh->thing); index++)
               if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
                 break;
-              
+
             if(next)
               return next->job_number;
             break;
