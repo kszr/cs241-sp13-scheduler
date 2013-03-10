@@ -191,14 +191,11 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             for(index = 0; index < priqueue_size(ugh->thing); index++) 
               if( (done = (job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
                   break;
-                
             priqueue_remove_at(ugh->thing, index);
             free(done);
-
             for(index = 0; index < priqueue_size(ugh->thing); index++)
               if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
                 break;
-
             if(next)
               return next->job_number;
             break;
