@@ -185,7 +185,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
     case 3: ugh->corelist[core_id] = 0; //The core is now idle
             done = (job_t *) priqueue_poll(ugh->thing); //retrieves and removes the head
             free(done); //the job is done
-            break; //The core is to remain idle for non-preemptive schemes.
+            next = (job_t *) priqueue_peek(ugh->thing); //the new head
+            if(next)
+              return next->job_number;
+            break;
     case 2:
     case 4:
     case 5:
