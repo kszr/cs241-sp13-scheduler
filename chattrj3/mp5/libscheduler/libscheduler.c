@@ -20,6 +20,7 @@ typedef struct _job_t
   int job_number;
   int priority;
   int running_time;
+  int is_running;
   int time;
 } job_t;
 
@@ -141,11 +142,13 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                       job->priority = priority;
                       job->running_time = running_time;
                       job->time = time; 
+                      job->is_running = 0; //not being performed
                       priqueue_offer(ugh->thing, job); 
                       //Look for an idle core
                       for(i=0; i<ugh->num_cores; i++)
                         if(!ugh->corelist[i]) {
                           ugh->corelist[i] = 1; //The core is now in use
+                          job->is_running = 1; //is being performed
                           return i; //The id of the core to which job has been assigned.
                         }
                       break; //All cores are busy.
@@ -180,19 +183,25 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
   job_t *done; //the finished job
+  job_t *next = NULL;
   int index; //the index of the job.
   switch(ugh->sch) {
     case 0: //FCFS, SJF, and PRI react in the same way to death.
     case 1:
     case 3: ugh->corelist[core_id] = 0; //The core is now idle
             for(index = 0; index < priqueue_size(ugh->thing); index++) 
-              if( ((job_t *) (done = priqueue_at(ugh->thing, index)))->job_number == job_number)
+              if( (done = (job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
                   break;
                 
             priqueue_remove_at(ugh->thing, index);
             free(done);
-           // if(next)
-           //   return next->job_number;
+
+            for(index = 0; index <priqueue_size(ugh->thing); index++)
+              if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
+                break;
+              
+            if(next)
+              return next->job_number;
             break;
     case 2:
     case 4:
