@@ -97,16 +97,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  int i;
+  job_t *job;
   //Actions determined by scheme
   switch(ugh->sch) {
     case 0 /*FCFS*/ : //The same actions are to be taken for all non-preemptive schemes.
     case 1 /*SJF*/  :
     case 3 /*PRI*/  : //Look for an idle core.
-                      int i=0;
                       for(i=0; i<ugh->num_cores; i++) {
                         if(!ugh->corelist[i]) {
                           ugh->corelist[i] = 1; //The core is now in use
-                          job_t *job = (job_t *) malloc(sizeof(job_t));
+                          job = (job_t *) malloc(sizeof(job_t));
                           job->job_number = job_number;
                           job->priority = priority;
                           job->running_time = running_time;
