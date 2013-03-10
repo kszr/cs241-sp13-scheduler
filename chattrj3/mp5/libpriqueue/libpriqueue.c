@@ -221,7 +221,7 @@ void *priqueue_remove_at(priqueue_t *q, int index)
     entry_t *prev = NULL;
     int found = 0;
 
-    while(curr && index <= curr->index) {
+    while(curr && index >= curr->index) {
         if(curr->index == index) {
             if(!prev)
                 q->head = curr->next;
