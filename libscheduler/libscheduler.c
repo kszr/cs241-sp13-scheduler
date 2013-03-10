@@ -99,7 +99,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   int i;
   job_t *job;
-  //Actions determined by scheme
+  //Actions are determined by scheme
   switch(ugh->sch) {
     case 0 /*FCFS*/ : //The same actions are to be taken for all non-preemptive schemes.
     case 1 /*SJF*/  :
