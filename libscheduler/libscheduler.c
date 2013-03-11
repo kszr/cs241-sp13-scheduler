@@ -185,27 +185,29 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       job->is_running = 1; //is being performed
       return job->core = i; //The id of the core to which job has been assigned.
     }
+
+    if(ugh->sch/3 + ugh->sch%3 < 2) return -1; //returns if nonpreemptive
   
 	/**
      * If there be no idle cores, use the power of preemption.
      * (Nonpreemptive jobs return -1 at the end of this function.)
      */
 
+    //rt = REMAINING time, not running time; pt = priority
+    int index, rt, lrt = -1, thindex = -1, pt, mpt = -1;
+    job_t *curr;
+
+    /**
+     * PREEMPTIVE SHORTEST JOB FIRST:
+     * This will preempt the job that is running with the largest
+     * remaining time, if that time be greteater than the running
+     * time for this job. It will additionally reschedule the 
+     * preempted job with updated running time.
+     * 
+     * One must remember that these schemes are like the nonpreemptive
+     * ones insomuch as there be no conflicts with jobs that are running.
+     */
     if(ugh->sch == PSJF) {
-        /**
-	     * PREEMPTIVE SHORTEST JOB FIRST:
-         * This will preempt the job that is running with the largest
-         * remaining time, if that time be greteater than the running
-         * time for this job. It will additionally reschedule the 
-	     * preempted job with updated running time.
-         * 
-         * One must remember that these schemes are like the nonpreemptive
-         * ones insomuch as there be no conflicts with jobs that are running.
-	     */
-
-        int index, rt, lrt = -1, thindex = -1; //rt = REMAINING time, not running time
-        job_t *curr;
-
         /**
          * Finding the largest remaining time of a running job and the index of the job
          * to which it belongs.
@@ -218,32 +220,48 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                     lrt = rt;
                     thindex = index;
                 }
-			}
-
-        /**
-         * thindex is the index of the job with the largest remaining time
-         * that is currently running. It is this job that the new job must
-         * attempt to preempt.
-         */
-
-        curr = priqueue_at(ugh->thing, thindex);
-
-        if(job->running_time < lrt) {
-            job->core = curr->core; //assign job to run on the preempted job's core
-            //job->pre_jobn = curr->job_number; //remember which job the new job preempted
-            priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
-            curr->running_time = lrt; //change its running time to be the remaining time
-            curr->is_running = 0; //remember that it is no longer running
-            job->is_running = 1;
-            curr->core = -1; //it is not running on any cores
-            priqueue_offer(ugh->thing, curr); //put it back into the priority queue
-            return job->core; //return the core on which job is to be run
-        }
-    
-        return -1; //job needs to wait in line like everyone else
+		    }
     }
+    else if(ugh->sch == PPRI) {
+        /**
+         * Finding the largest priority number or lowest priority of a running job 
+         * and the index of the job to which it belongs.
+         */
+        for(index = 0; index < priqueue_size(ugh->thing); index++)
+            if( ((job_t *) priqueue_at(ugh->thing, index))->is_running) {
+                curr = (job_t *) priqueue_at(ugh->thing, index);
+            
+                if(mpt < (pt = curr->priority)) {
+                    lrt = curr->running_time - time + curr->time;
+                    mpt = pt;
+                    thindex = index;
+                }
+            }
+    }
+        
 
-    return job->core = -1; //if nonpreemptive
+    /**
+     * thindex is the index of the job with the largest remaining time/priority number
+     * that is currently running. It is this job that the new job must
+     * attempt to preempt.
+     */
+
+    curr = priqueue_at(ugh->thing, thindex);
+
+    if(job->running_time < lrt) {
+        job->core = curr->core; //assign job to run on the preempted job's core
+        //job->pre_jobn = curr->job_number; //remember which job the new job preempted
+        priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
+        curr->running_time = lrt; //change its running time to be the remaining time
+        curr->is_running = 0; //remember that it is no longer running
+        job->is_running = 1;
+        curr->core = -1; //it is not running on any cores
+        priqueue_offer(ugh->thing, curr); //put it back into the priority queue
+        return job->core; //return the core on which job is to be run
+    }
+    
+    return -1; //job needs to wait in line like everyone else
+
 }
 
 
