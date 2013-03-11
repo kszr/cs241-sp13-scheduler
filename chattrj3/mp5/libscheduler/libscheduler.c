@@ -100,7 +100,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
             break;
     case 4: priqueue_init(ugh->thing, compare3);
             break;
-    case 5:
+    case 5: 
     default: break;
   }
 
@@ -204,7 +204,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             
   priqueue_remove_at(ugh->thing, index);
   
-  ugh->total_time += done->time; //total time updated only when a job is done
+  ugh->total_time += done->running_time; //total time updated only when a job is done
   
   free(done);
             
