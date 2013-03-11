@@ -63,7 +63,7 @@ typedef struct _psjfirst_t{
     job_t *devimon;
 } psjfirst_t;
 
-//The comparison function for PSJF.
+//The comparison function for PSJF. Dubtful.
 int compare2(const void * a, const void * b)
 {
   return ( ((psjfirst_t *) a)->devimon->running_time - 
