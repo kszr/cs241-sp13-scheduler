@@ -173,7 +173,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->running_time = running_time;
   job->time = time; 
   job->is_running = 0; //not being performed by default
-  job->pre_jobn = -1; //it hasn't preempted anything yet
+  //job->pre_jobn = -1; //it hasn't preempted anything yet
 
   priqueue_offer(ugh->thing, job); 
 
@@ -203,19 +203,22 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
          * ones insomuch as there be no conflicts with jobs that are running.
 	     */
 
-        int index, rt = -1, srt = -1, thindex = 0; //rt = REMAINING time, not running time
+        int index, rt, lrt = -1, thindex = -1; //rt = REMAINING time, not running time
         job_t *curr;
 
         /**
-         * Finding the shortest remaining time and the index of the job
+         * Finding the largest remaining time of a running job and the index of the job
          * to which it belongs.
          */
 	    for(index = 0; index < priqueue_size(ugh->thing); index++)
-            if( (curr = (job_t *) priqueue_at(ugh->thing, index))->is_running)
-                if(srt < (rt = curr->running_time - time + curr->time)) {
-                    srt = rt;
+            if( ((job_t *) priqueue_at(ugh->thing, index))->is_running) {
+                curr = (job_t *) priqueue_at(ugh->thing, index);
+			
+				if(lrt < (rt = curr->running_time - time + curr->time)) {
+                    lrt = rt;
                     thindex = index;
                 }
+			}
 
         /**
          * thindex is the index of the job with the largest remaining time
@@ -225,13 +228,14 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 
         curr = priqueue_at(ugh->thing, thindex);
 
-        if(job->running_time < srt) {
+        if(job->running_time < lrt) {
             job->core = curr->core; //assign job to run on the preempted job's core
             //job->pre_jobn = curr->job_number; //remember which job the new job preempted
             priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
-            curr->running_time = srt; //change its running time to be the remaining time
+            curr->running_time = lrt; //change its running time to be the remaining time
             curr->is_running = 0; //remember that it is no longer running
             curr->core = -1; //it is not running on any core
+			
             priqueue_offer(ugh->thing, curr); //put it back into the priority queue
             return job->core; //return the core on which job is to be run
         }
