@@ -106,17 +106,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
    */
   //Different schemes have different notions of priority.
   switch(scheme) {
-    case 0: priqueue_init(ugh->thing, compare0);
+    case FCFS: priqueue_init(ugh->thing, compare0);
             break;
-    case 1: priqueue_init(ugh->thing, compare1);
+    case SJF: priqueue_init(ugh->thing, compare1);
             break;
-    case 2: priqueue_init(ugh->thing, compare2);
+    case PSJF: priqueue_init(ugh->thing, compare2);
             break;
-    case 3: priqueue_init(ugh->thing, compare3);
+    case PRI: priqueue_init(ugh->thing, compare3);
             break;
-    case 4: priqueue_init(ugh->thing, compare3);
+    case PPRI: priqueue_init(ugh->thing, compare3);
             break;
-    case 5: 
+    case RR: 
     default: break;
   }
 
@@ -180,7 +180,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
      * (Nonpreemptive jobs return -1 at the end of this function.)
      */
 
-    if(ugh->sch == 2) {
+    if(ugh->sch == PSJF) {
         /**
 	     * PREEMPTIVE SHORTEST JOB FIRST:
          * This will preempt the job that is running with the largest
@@ -228,7 +228,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         return -1; //job needs to wait in line like everyone else
     }
 
-    return -1; //if nonpreemptive
+    return job->core = -1; //if nonpreemptive
 }
 
 
@@ -257,18 +257,20 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   job_t *done; //the finished job
   job_t *next = NULL;
   
-  ugh->corelist[core_id] = 0; //The core is now idle
+   //The core is now idle
 
   int index;
   for(index = 0; index < priqueue_size(ugh->thing); index++) 
-    if( (done = (job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
-      break;
+    if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == job_number) {
+    	done = (job_t *) priqueue_at(ugh->thing, index);
+		break;
+	}
             
   priqueue_remove_at(ugh->thing, index);
   
   ugh->total_time += done->time; //total time updated only when a job is done
   int nextjob = done->pre_jobn;
-
+ 
   free(done);
             
   for(index = 0; index < priqueue_size(ugh->thing); index++)
@@ -277,12 +279,15 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         break;
     }
           
-    if(next && nextjob == -1) 
+    if(next) {// && nextjob == -1) {
+	next->core = core_id;
         return next->job_number;
+    }
   	else if(nextjob != -1)
     	return nextjob;
    
   //The core should remain idle, such as for instance when the queue is empty.
+	ugh->corelist[core_id] = 0;
 	return -1;
 }
 
@@ -370,5 +375,9 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
+	int i;
+	for(i=0; i<priqueue_size(ugh->thing); i++)
+		printf("%d(%d) ", ( (job_t *) priqueue_at(ugh->thing, i))->job_number, ( (job_t *) priqueue_at(ugh->thing, i))->core);
 
+	printf("\n");
 }
