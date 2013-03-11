@@ -227,7 +227,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 
         if(job->running_time < srt) {
             job->core = curr->core; //assign job to run on the preempted job's core
-            job->pre_jobn = curr->job_number; //remember which job the new job preempted
+            //job->pre_jobn = curr->job_number; //remember which job the new job preempted
             priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
             curr->running_time = srt; //change its running time to be the remaining time
             curr->is_running = 0; //remember that it is no longer running
@@ -268,7 +268,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   job_t *done; //the finished job
   job_t *next = NULL;
   
-   //The core is now idle
+  //The core is now idle
   ugh->corelist[core_id] = 0;
   int index;
   for(index = 0; index < priqueue_size(ugh->thing); index++) 
@@ -280,7 +280,6 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   priqueue_remove_at(ugh->thing, index);
   
   ugh->total_time += done->time; //total time updated only when a job is done
-  int nextjob = done->pre_jobn;
  
   free(done);
             
@@ -290,14 +289,14 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         break;
     }
           
-    if(next) {//&& nextjob == -1) {
-	next->core = core_id;
-	ugh->corelist[core_id] = 1;
-	next->is_running = 1;
-        return next->job_number;
+    if(next) {
+	   next->core = core_id;
+	   ugh->corelist[core_id] = 1;
+	   next->is_running = 1;
+       return next->job_number;
     }
    
-  //The core should remain idle, such as for instance when the queue is empty.
+    //The core should remain idle, such as for instance when the queue is empty.
 	
 	return -1;
 }
