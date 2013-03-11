@@ -248,7 +248,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 
     curr = priqueue_at(ugh->thing, thindex);
 
-    if(job->running_time < lrt) {
+    if( (ugh->sch == PSJF && job->running_time < lrt) ||
+        (ugh->sch == PPRI && job->priority < mpt) ) {
         job->core = curr->core; //assign job to run on the preempted job's core
         //job->pre_jobn = curr->job_number; //remember which job the new job preempted
         priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
