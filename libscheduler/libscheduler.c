@@ -156,16 +156,40 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       job->core = i;
       return i; //The id of the core to which job has been assigned.
     }
-
-  //All cores are busy. Return, if nonpreemptive.
-  if(ugh->sch%3 + ugh->sch/3 < 2) //i.e. if scheme is 0, 1, or 3
-    return -1; 
-
-  //If there are no idle cores, use the power of preemption.
-  /*SOMETHING*/
   
+	//If there be no idle cores, use the power of preemption.
+  	
+	int index, srt = INT_MAX, rt, thindex = 0; //rt = REMAINING TIME, not running time
+	job_t * rjpwln;
+	switch(ugh->sch) {
+		case 2: /**
+				 * PREEMPTIVE SHORTEST JOB FIRST:
+				 * This will attempt to preempt the job with the shortest
+				 * remaining time, if that time be greteater than the running
+				 * time for this job. It will additionally reschedule the 
+				 * preempted job with updated running time.
+				 */
 
-	return -1;
+				//finding the job with the shortest remaining time
+				for(index = 0; index < priqueue_size(ugh->thing); index++)
+					/**
+ 					 * One must remember that these schemes are like the nonpreemptive
+ 					 * ones insomuch as there be no conflicts with jobs that ARE RUNNING.
+ 					 */
+					if( ( rjpwln = (job_t *) priqueue_at(index))->is_running)
+						if(srt > rt = time - rjpwln->time) {  
+							srt = rt;
+							thindex = index; 
+						}
+
+				//The job with the shortest rt is at thindex
+				if(srt > job->running_time) {
+					job_t *preempted = 
+				}
+		case 4:
+		case 5:
+		default: return -1; //if nonpreemptive
+	}
 }
 
 
