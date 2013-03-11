@@ -21,6 +21,7 @@ typedef struct _job_t
   int running_time;
   int is_running;
   int time;
+  int core;
 } job_t;
 
 /**
@@ -136,50 +137,33 @@ void scheduler_start_up(int cores, scheme_t scheme)
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   ugh->num_jobs++;
-  int i; //Loop variable
-  job_t *job; //New job
-  //Actions are determined by the scheme.
-  switch(ugh->sch) {
-    case 0 /*FCFS*/ : //The same actions are to be taken for all non-preemptive schemes.
-    case 1 /*SJF*/  : //
-    case 3 /*PRI*/  : //Add job to the queue
-                      job = (job_t *) malloc(sizeof(job_t));
-                      job->job_number = job_number;
-                      job->priority = priority;
-                      job->running_time = running_time;
-                      job->time = time; 
-                      job->is_running = 0; //not being performed by default
-                      priqueue_offer(ugh->thing, job); 
-                      //Look for an idle core
-                      for(i=0; i<ugh->num_cores; i++)
-                        if(!ugh->corelist[i]) {
-                          ugh->corelist[i] = 1; //The core is now in use
-                          job->is_running = 1; //is being performed
-                          return i; //The id of the core to which job has been assigned.
-                        }
-                      break; //All cores are busy.
-    case 2 /*PSJF*/ : //PSJF and PPRI should work in the same way.
-    case 4 /*PPRI*/ : //Add job to the queue
-                      job = (job_t *) malloc(sizeof(job_t));
-                      job->job_number = job_number;
-                      job->priority = priority;
-                      job->running_time = running_time;
-                      job->time = time; 
-                      job->is_running = 0; //not being performed by default
-                      priqueue_offer(ugh->thing, job); 
-                      //Look for an idle core
-                      for(i=0; i<ugh->num_cores; i++)
-                        if(!ugh->corelist[i]) {
-                          ugh->corelist[i] = 1; //The core is now in use
-                          job->is_running = 1; //is being performed
-                          return i; //The id of the core to which job has been assigned.
-                        }
-                      //If there are no idle cores, use the power of preemption.
-                      /*SOMETHING*/
-    case 5 /*RR*/   :
 
-    default         : break;
-  }
+  job_t *job = (job_t *) malloc(sizeof(job_t));
+  job->job_number = job_number;
+  job->priority = priority;
+  job->running_time = running_time;
+  job->time = time; 
+  job->is_running = 0; //not being performed by default
+
+  priqueue_offer(ugh->thing, job); 
+
+  //Look for an idle core
+  int i;
+  for(i=0; i<ugh->num_cores; i++)
+    if(!ugh->corelist[i]) {
+      ugh->corelist[i] = 1; //The core is now in use
+      job->is_running = 1; //is being performed
+      job->core = i;
+      return i; //The id of the core to which job has been assigned.
+    }
+
+//All cores are busy. Return, if nonpreemptive.
+if(ugh->sch%3 + ugh->sch/3 < 2) //i.e. if scheme is 0, 1, or 3
+    return -1; 
+
+//If there are no idle cores, use the power of preemption.
+/*SOMETHING*/
+  
 
 	return -1;
 }
