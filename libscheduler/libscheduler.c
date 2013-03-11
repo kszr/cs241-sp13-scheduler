@@ -16,13 +16,13 @@
 */
 typedef struct _job_t
 {
-  int job_number;
-  int priority;
-  int running_time;
-  int is_running;
-  int time;
-  int core;
-  int pre_jobn;
+    int job_number;
+    int priority;
+    int running_time;
+    int is_running;
+    int time;
+    int core;
+    int pre_jobn;
 } job_t;
 
 /**
@@ -152,11 +152,6 @@ void scheduler_start_up(int cores, scheme_t scheme)
  
  */
 
-typedef _oekr_oekr_t {
-    int remaining time;
-    int index;
-}ministruct;
-
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   ugh->num_jobs++;
@@ -223,12 +218,12 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         if(job->running_time < srt) {
             job->core = curr->core; //assign job to run on the preempted job's core
             job->pre_jobn = curr->job_number; //remember which job the new job preempted
-            priqueue_remove_at(thindex); //remove curr from the queue in order to fix its stats
+            priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
             curr->running_time = srt; //change its running time to be the remaining time
             curr->is_running = 0; //remember that it is no longer running
             curr->core = -1; //it is not running on any core
             priqueue_offer(ugh->thing, curr); //put it back into the priority queue
-            return score; //return the core on which job is to be run
+            return job->core; //return the core on which job is to be run
         }
     
         return -1; //job needs to wait in line like everyone else
