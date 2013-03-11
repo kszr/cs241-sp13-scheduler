@@ -234,6 +234,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
             curr->running_time = lrt; //change its running time to be the remaining time
             curr->is_running = 0; //remember that it is no longer running
+            job->is_running = 1;
             curr->core = -1; //it is not running on any cores
             priqueue_offer(ugh->thing, curr); //put it back into the priority queue
             return job->core; //return the core on which job is to be run
