@@ -175,7 +175,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
 	if(!q->head) return removed;
 
 	int i;
-	for(i=0; i<priqueue_size(q); i++) {
+	while(curr) {
 		if(ptr == curr->data) {
 			removed++;
 			q->size--;
