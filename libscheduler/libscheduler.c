@@ -35,7 +35,6 @@ typedef struct _details_t {
   int num_cores;
   int total_time; //stats
   int num_jobs; //stats
-  int secret;
 } details_t;
 
 static details_t *ugh = NULL;
@@ -137,7 +136,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-  if(ugh->num_jobs++ == 0) ugh->secret = running_time;
+  ugh->num_jobs++;
 
   job_t *job = (job_t *) malloc(sizeof(job_t));
   job->job_number = job_number;
