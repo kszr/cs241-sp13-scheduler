@@ -22,6 +22,7 @@ typedef struct _job_t
   int is_running;
   int time;
   int core;
+  int pre_jobn;
 } job_t;
 
 /**
@@ -55,6 +56,22 @@ int compare3(const void * a, const void * b)
 int compare1(const void * a, const void * b)
 {
   return ( ((job_t*)a)->running_time - ((job_t*)b)->running_time );
+}
+
+typedef struct _psjfirst_t{
+    int time;
+    job_t *devimon;
+} psjfirst_t;
+
+//The comparison function for PSJF.
+int compare2(const void * a, const void * b)
+{
+  return ( ((psjfirst_t *) a)->devimon->running_time - 
+           ((psjfirst_t *) a)->time + 
+           ((psjfirst_t *) a)->devimon->time ) -
+         ( ((psjfirst_t *) a)->devimon->running_time - 
+           ((psjfirst_t *) a)->time + 
+           ((psjfirst_t *) a)->devimon->time );
 }
 
 /**
@@ -93,7 +110,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
             break;
     case 1: priqueue_init(ugh->thing, compare1);
             break;
-    case 2: priqueue_init(ugh->thing, compare1);
+    case 2: priqueue_init(ugh->thing, compare2);
             break;
     case 3: priqueue_init(ugh->thing, compare3);
             break;
@@ -134,6 +151,12 @@ void scheduler_start_up(int cores, scheme_t scheme)
   @return -1 if no scheduling changes should be made. 
  
  */
+
+typedef _oekr_oekr_t {
+    int remaining time;
+    int index;
+}ministruct;
+
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
   ugh->num_jobs++;
@@ -144,6 +167,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->running_time = running_time;
   job->time = time; 
   job->is_running = 0; //not being performed by default
+  job->pre_jobn = -1; //it hasn't preempted anything yet
 
   priqueue_offer(ugh->thing, job); 
 
@@ -159,36 +183,51 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   
 	//If there be no idle cores, use the power of preemption.
   	
-	int index, srt = INT_MAX, rt, thindex = 0; //rt = REMAINING TIME, not running time
-	job_t * rjpwln;
-	switch(ugh->sch) {
-		case 2: /**
-				 * PREEMPTIVE SHORTEST JOB FIRST:
-				 * This will attempt to preempt the job with the shortest
-				 * remaining time, if that time be greteater than the running
-				 * time for this job. It will additionally reschedule the 
-				 * preempted job with updated running time.
-				 */
+    if(ugh->sch == 2) {
+        /**
+	     * PREEMPTIVE SHORTEST JOB FIRST:
+         * This will preempt the job that is running with the largest
+         * remaining time, if that time be greteater than the running
+         * time for this job. It will additionally reschedule the 
+	     * preempted job with updated running time.
+	     */
 
-				//finding the job with the shortest remaining time
-				for(index = 0; index < priqueue_size(ugh->thing); index++)
-					/**
- 					 * One must remember that these schemes are like the nonpreemptive
- 					 * ones insomuch as there be no conflicts with jobs that ARE RUNNING.
- 					 */
-					if( ( rjpwln = (job_t *) priqueue_at(index))->is_running)
-						if(srt > rt = time - rjpwln->time) {  
-							srt = rt;
-							thindex = index; 
-						}
+        int index, rt = -1, srt = -1, thindex = 0;
+        job_t *curr;
+	    for(index = 0; index < priqueue_at(ugh->thing, index); index++)
+	    /**
+ 	     * One must remember that these schemes are like the nonpreemptive
+ 	     *  ones insomuch as there be no conflicts with jobs that ARE RUNNING.
+ 	     */
+            if( (curr = (job_t *) priqueue_at(ugh->thing, index))->is_running)
+                if(srt < (rt = curr->running_time - time + curr->time)) {
+                    srt = rt;
+                    thindex = index;
+                }
 
-				//The job with the shortest rt is at thindex
-				if(srt > job->running_time) {
-					job_t *preempted = 
-				}
-		case 4:
-		case 5:
-		default: return -1; //if nonpreemptive
+        /**
+         * thindex is the index of the job with the largest remaining time
+         * that is currently running. It is this job that the new job must
+         * attempt to preempt.
+         */
+
+        curr = priqueue_at(ugh->thing, thindex);
+
+        if(job->running_time < srt) {
+            int score = curr->core; //assign job to run on the preempted job's core
+            job->pre_jobn = curr->job_number; //remember which job job preempted
+            priqueue_remove_at(thindex); //remove curr in order to fix it
+            curr->running_time = srt; //change its running time
+            curr->is_running = 0; //remember that it is no longer running
+            curr->core = -1; //it is not running on any core
+            priqueue_offer(ugh->thing, curr); //put it back into the priority queue
+            return score; //the core on which job is to be run
+        }
+    
+        return -1; //job needs to wait in line like everyone else
+    }
+
+    return -1; //if nonpreemptive
 	}
 }
 
@@ -228,15 +267,18 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   priqueue_remove_at(ugh->thing, index);
   
   ugh->total_time += done->time; //total time updated only when a job is done
-  
+  int nextjob = done->pre_jobn;
+
   free(done);
             
   for(index = 0; index < priqueue_size(ugh->thing); index++)
     if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
       break;
           
-  if(next) 
+  if(next )//&& nextjob == -1) 
     return next->job_number;
+  //else if(nextjob != -1)
+    //return nextjob;
    
   //The core should remain idle, such as for instance when the queue is empty.
 	return -1;
@@ -271,7 +313,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return ugh->total_time/ ( (float) ugh->num_jobs);
+	return ugh->total_time / ( (float) ugh->num_jobs);
 }
 
 
