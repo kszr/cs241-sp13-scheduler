@@ -267,7 +267,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   priqueue_remove_at(ugh->thing, index);
   
   ugh->total_time += done->time; //total time updated only when a job is done
- // int nextjob = done->pre_jobn;
+  int nextjob = done->pre_jobn;
 
   free(done);
             
@@ -277,10 +277,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         break;
     }
           
-    if(next )//&& nextjob == -1) 
+    if(next && nextjob == -1) 
         return next->job_number;
-  //else if(nextjob != -1)
-    //return nextjob;
+  	else if(nextjob != -1)
+    	return nextjob;
    
   //The core should remain idle, such as for instance when the queue is empty.
 	return -1;
