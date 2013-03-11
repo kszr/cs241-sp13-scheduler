@@ -23,6 +23,7 @@ typedef struct _job_t
     int time;
     int core;
     int pre_jobn;
+    int response_time; //when it first got some time in a core
 } job_t;
 
 /**
@@ -58,23 +59,32 @@ int compare1(const void * a, const void * b)
   return ( ((job_t*)a)->running_time - ((job_t*)b)->running_time );
 }
 
-typedef struct _psjfirst_t{
-    int time;
-    job_t *devimon;
-} psjfirst_t;
+/**
+ * Finds the entry with the maximum value of an attribute 
+ * determined by the comparer function passed into it.
+ */
+ministruct_t * max(priqueue_t *q, const void *a, const void *b, 
+        int(*comparer)(const void *, const void *) {
+    
+    job_t *sofar = priqueue_peek(q); //the head
 
-//The comparison function for PSJF. Dubtful.
-int compare2(const void * a, const void * b)
-{
-  return ( ((psjfirst_t *) a)->devimon->running_time - 
-           ((psjfirst_t *) a)->time + 
-           ((psjfirst_t *) a)->devimon->time ) -
-         ( ((psjfirst_t *) a)->devimon->running_time - 
-           ((psjfirst_t *) a)->time + 
-           ((psjfirst_t *) a)->devimon->time );
+    int index;
+
+    for(index = 0; index < priqueue_size(q); index++)
+        ;
+    for(index = 0; index < priqueue_size(q); index++)
+        if( ((job_t *) priqueue_at(index))->is_running)
+            if(comparer((void *) sofar, (void *) priqueue_at(index)) < 0)
+                sofar = priqueue_at(thindex = index);
+    
+    ministruct_t roofus;
+    roofus->maxest = sofar;
+    roofus->thindex = thindex;
+
+    return &roofus;           
 }
 
-/**
+/** 
   Initalizes the scheduler.
  
   Assumptions:
@@ -104,16 +114,17 @@ void scheduler_start_up(int cores, scheme_t scheme)
    * 4 = PPRI
    * 5 = RR
    */
-  //Different schemes have different notions of priority.
+  /**
+   * Different schemes have different notions of priority. The
+   * preemptive versions of schemes are in principle the same.
+   */
   switch(scheme) {
     case FCFS: priqueue_init(ugh->thing, compare0);
             break;
-    case SJF: priqueue_init(ugh->thing, compare1);
+    case SJF:
+    case PSJF: priqueue_init(ugh->thing, compare1);
             break;
-    case PSJF: priqueue_init(ugh->thing, compare2);
-            break;
-    case PRI: priqueue_init(ugh->thing, compare3);
-            break;
+    case PRI:
     case PPRI: priqueue_init(ugh->thing, compare3);
             break;
     case RR: 
@@ -220,7 +231,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
             curr->running_time = srt; //change its running time to be the remaining time
             curr->is_running = 0; //remember that it is no longer running
-	    curr->time = time + running_time; 
             curr->core = -1; //it is not running on any core
             priqueue_offer(ugh->thing, curr); //put it back into the priority queue
             return job->core; //return the core on which job is to be run
@@ -280,24 +290,12 @@ int scheduler_job_finished(int core_id, int job_number, int time)
         break;
     }
           
-    if(next ) {//&& nextjob == -1) {
+    if(next) {//&& nextjob == -1) {
 	next->core = core_id;
 	ugh->corelist[core_id] = 1;
 	next->is_running = 1;
         return next->job_number;
-    } 
-    else if(nextjob != -1) {
-	for(index = 0; index < priqueue_size(ugh->thing); index++) 
-    		if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == nextjob) {
-    			next = (job_t *) priqueue_at(ugh->thing, index);
-			break;
-		}
-	next->is_running = 1;
-	
-	ugh->corelist[core_id] = 1;
-	next->core = -1;
-    	return nextjob;
-    } 
+    }
    
   //The core should remain idle, such as for instance when the queue is empty.
 	
