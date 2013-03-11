@@ -204,7 +204,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             
   priqueue_remove_at(ugh->thing, index);
   
-  ugh->total_time += done->running_time; //total time updated only when a job is done
+  ugh->total_time += done->time; //total time updated only when a job is done
   
   free(done);
             
@@ -248,7 +248,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return (ugh->total_time - ugh->secret)/ ( (float) ugh->num_jobs);
+	return ugh->total_time/ ( (float) ugh->num_jobs);
 }
 
 
