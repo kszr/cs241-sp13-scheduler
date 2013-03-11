@@ -62,7 +62,7 @@ int compare1(const void * a, const void * b)
 /**
  * Finds the entry with the maximum value of an attribute 
  * determined by the comparer function passed into it.
- */
+ */ /*
 ministruct_t * max(priqueue_t *q, const void *a, const void *b, 
         int(*comparer)(const void *, const void *) {
     
@@ -83,7 +83,7 @@ ministruct_t * max(priqueue_t *q, const void *a, const void *b,
 
     return &roofus;           
 }
-
+*/
 /** 
   Initalizes the scheduler.
  
