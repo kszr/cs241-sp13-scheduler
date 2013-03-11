@@ -258,7 +258,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   job_t *next = NULL;
   
    //The core is now idle
-
+  ugh->corelist[core_id] = 0;
   int index;
   for(index = 0; index < priqueue_size(ugh->thing); index++) 
     if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == job_number) {
@@ -281,13 +281,15 @@ int scheduler_job_finished(int core_id, int job_number, int time)
           
     if(next) {// && nextjob == -1) {
 	next->core = core_id;
+	ugh->corelist[core_id] = 1;
+	next->is_running = 1;
         return next->job_number;
     }
   	else if(nextjob != -1)
     	return nextjob;
    
   //The core should remain idle, such as for instance when the queue is empty.
-	ugh->corelist[core_id] = 0;
+	
 	return -1;
 }
 
