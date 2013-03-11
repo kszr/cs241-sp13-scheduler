@@ -35,6 +35,7 @@ typedef struct _details_t {
   int num_cores;
   int total_time; //stats
   int num_jobs; //stats
+  int secret;
 } details_t;
 
 static details_t *ugh = NULL;
@@ -76,8 +77,8 @@ void scheduler_start_up(int cores, scheme_t scheme)
   ugh = (details_t *) malloc(sizeof(details_t));
   ugh->thing = (priqueue_t *) malloc(sizeof(priqueue_t));
   ugh->corelist = (int *) malloc(sizeof(int) * (ugh->num_cores = cores));
-  
-  ugh->total_time = ugh->num_jobs = 0;
+
+  ugh->total_time = ugh->num_jobs = ugh->secret = 0;
 
   /**
    * 0 = FCFS
@@ -136,7 +137,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-  ugh->num_jobs++;
+  if(ugh->num_jobs++ == 0) ugh->secret = running_time;
 
   job_t *job = (job_t *) malloc(sizeof(job_t));
   job->job_number = job_number;
@@ -186,28 +187,35 @@ if(ugh->sch%3 + ugh->sch/3 < 2) //i.e. if scheme is 0, 1, or 3
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
+  /**
+   * The current assumption is that this function works similarly for
+   * every scheme. Preemption occurs when a new job arrives.
+   */
+
   job_t *done; //the finished job
   job_t *next = NULL;
-  int index; //the index of the job.
-  switch(ugh->sch) {
-    case 0: //FCFS, SJF, and PRI react in the same way to death.
-    case 1: //
-    case 3: ugh->corelist[core_id] = 0; //The core is now idle
-            for(index = 0; index < priqueue_size(ugh->thing); index++) 
-              if( (done = (job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
-                  break;
-            priqueue_remove_at(ugh->thing, index);
-            free(done);
-            for(index = 0; index < priqueue_size(ugh->thing); index++)
-              if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
-                break;
-            if(next) return next->job_number;
-            break;
-    case 2:
-    case 4:
-    case 5:
-    default: break;
-  }
+  
+  ugh->corelist[core_id] = 0; //The core is now idle
+
+  int index;
+  for(index = 0; index < priqueue_size(ugh->thing); index++) 
+    if( (done = (job_t *) priqueue_at(ugh->thing, index))->job_number == job_number)
+      break;
+            
+  priqueue_remove_at(ugh->thing, index);
+  
+  ugh->total_time += job->time; //total time updated only when a job is done
+  
+  free(done);
+            
+  for(index = 0; index < priqueue_size(ugh->thing); index++)
+    if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
+      break;
+          
+  if(next) return next->job_number;
+    break;
+   
+  //The core should remain idle, such as for instance when the queue is empty.
 	return -1;
 }
 
@@ -240,7 +248,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return 0.0;
+	return (ugh->total_time - ugh->secret)/ ( (float) ugh->num_jobs);
 }
 
 
