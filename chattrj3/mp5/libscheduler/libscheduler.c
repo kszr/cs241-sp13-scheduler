@@ -220,6 +220,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
             curr->running_time = srt; //change its running time to be the remaining time
             curr->is_running = 0; //remember that it is no longer running
+	    curr->time = time + running_time; 
             curr->core = -1; //it is not running on any core
             priqueue_offer(ugh->thing, curr); //put it back into the priority queue
             return job->core; //return the core on which job is to be run
@@ -285,8 +286,17 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	next->is_running = 1;
         return next->job_number;
     }
-  	else if(nextjob != -1)
+    else if(nextjob != -1) {
+	for(index = 0; index < priqueue_size(ugh->thing); index++) 
+    		if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == nextjob) {
+    			next = (job_t *) priqueue_at(ugh->thing, index);
+			break;
+		}
+	next->is_running = 1;
+	ugh->corelist[core_id] = 1;
+	next->core = core_id;
     	return nextjob;
+    }
    
   //The core should remain idle, such as for instance when the queue is empty.
 	
