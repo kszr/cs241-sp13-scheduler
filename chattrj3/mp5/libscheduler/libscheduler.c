@@ -157,12 +157,12 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       return i; //The id of the core to which job has been assigned.
     }
 
-//All cores are busy. Return, if nonpreemptive.
-if(ugh->sch%3 + ugh->sch/3 < 2) //i.e. if scheme is 0, 1, or 3
+  //All cores are busy. Return, if nonpreemptive.
+  if(ugh->sch%3 + ugh->sch/3 < 2) //i.e. if scheme is 0, 1, or 3
     return -1; 
 
-//If there are no idle cores, use the power of preemption.
-/*SOMETHING*/
+  //If there are no idle cores, use the power of preemption.
+  /*SOMETHING*/
   
 
 	return -1;
