@@ -121,7 +121,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   }
 
   int i;
-  for(i = 0; i < cores; i++)
+  for(i = 0; i < ugh->num_cores; i++)
     ugh->corelist[i] = 0; //Every core is initially idle.
 
   ugh->sch = scheme;
@@ -172,8 +172,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     if(!ugh->corelist[i]) {
       ugh->corelist[i] = 1; //The core is now in use
       job->is_running = 1; //is being performed
-      job->core = i;
-      return i; //The id of the core to which job has been assigned.
+      return job->core = i; //The id of the core to which job has been assigned.
     }
   
 	/**
@@ -268,7 +267,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   priqueue_remove_at(ugh->thing, index);
   
   ugh->total_time += done->time; //total time updated only when a job is done
-  int nextjob = done->pre_jobn;
+ // int nextjob = done->pre_jobn;
 
   free(done);
             
@@ -276,8 +275,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
     if( !(next = (job_t *) priqueue_at(ugh->thing, index))->is_running)
       break;
           
-  if(next )//&& nextjob == -1) 
-    return next->job_number;
+ // if(next )//&& nextjob == -1) 
+   // return next->job_number;
   //else if(nextjob != -1)
     //return nextjob;
    
