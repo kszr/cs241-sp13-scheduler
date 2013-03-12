@@ -58,7 +58,7 @@ int compare3(const void * a, const void * b)
 {
   int pridiff = ( ((job_t*)a)->priority - ((job_t*)b)->priority );
 
-  return pridiff == 0 ? compare0(a, b) : pridiff;
+  return pridiff == 0 ? compare0(b, a) : pridiff;
 }
 
 //The comparison function for SJF.
