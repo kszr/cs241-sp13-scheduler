@@ -24,6 +24,8 @@ typedef struct _job_t
     int core;
     int firsty; //1 = it has been seen before
     int response_time; //when it first got some time in a core
+    int waiting_time;
+    int when_preempted;
 } job_t;
 
 /**
@@ -37,6 +39,7 @@ typedef struct _details_t {
   int num_cores;
   int total_response_time;
   int total_turnaround_time;
+  int total_waiting_time;
   int num_jobs; //stats
 } details_t;
 
@@ -82,7 +85,10 @@ void scheduler_start_up(int cores, scheme_t scheme)
   ugh->thing = (priqueue_t *) malloc(sizeof(priqueue_t));
   ugh->corelist = (int *) malloc(sizeof(int) * (ugh->num_cores = cores));
 
-  ugh->total_response_time = ugh->total_turnaround_time = ugh->num_jobs = 0;
+  ugh->total_response_time = 
+  ugh->total_turnaround_time = 
+  ugh->total_waiting_time = 
+  ugh->num_jobs = 0;
 
   /**
    * 0 = FCFS
@@ -150,10 +156,14 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->priority = priority;
   job->running_time = running_time;
   job->time = time; 
-  job->is_running = 0; //not being performed by default
-  job->firsty = 0;
-  job->response_time = 0;
-  job->core = -1;
+
+  job->is_running =
+  job->firsty =
+  job->response_time =
+  job->waiting_time = 
+  job->when_preempted = 0;
+
+  job->core = -1; //no core has been assigned to it yet
 
   priqueue_offer(ugh->thing, job); 
 
@@ -243,6 +253,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         curr->is_running = 0; //remember that it is no longer running
         job->is_running = job->firsty = 1;
         job->response_time = 0;//time - job->time + 1;
+        job->when_preempted = time;
         curr->core = -1; //it is not running on any cores
         priqueue_offer(ugh->thing, curr); //put it back into the priority queue
         return job->core; //return the core on which job is to be run
@@ -289,8 +300,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             
   priqueue_remove_at(ugh->thing, index);
   
-  ugh->total_response_time += done->response_time; //total response time updated only when a job is done
+  //temporal statistics are calculated only when a job is done
+  ugh->total_response_time += done->response_time;
   ugh->total_turnaround_time += time - done->time;
+  ugh->total_waiting_time += done->waiting_time;
 
   free(done);
             
@@ -304,6 +317,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	   next->core = core_id;
 	   ugh->corelist[core_id] = 1;
 	   next->is_running = 1;
+       next->waiting_time += time - next->when_preempted;
        if(!next->firsty) {
             next->firsty = 1;
             next->response_time = time - next->time;
@@ -345,7 +359,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return 0.0;
+	return ugh->total_waiting_time / ((float) ugh->num_jobs);
 }
 
 
