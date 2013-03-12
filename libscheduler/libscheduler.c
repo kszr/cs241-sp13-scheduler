@@ -64,7 +64,9 @@ int compare3(const void * a, const void * b)
 //The comparison function for SJF.
 int compare1(const void * a, const void * b)
 {
-  return ( ((job_t*)a)->running_time - ((job_t*)b)->running_time );
+  int remtm = ( ((job_t*)a)->running_time - ((job_t*)b)->running_time );
+
+  return remtm == 0 ? compare0(a, b) : remtm;
 }
 
 /** 
