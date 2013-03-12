@@ -255,13 +255,13 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         curr->running_time = lrt; //change its running time to be the remaining time
         curr->is_running = 0; //remember that it is no longer running
         job->is_running = job->firsty = 1;
-        job->response_time = 0;//time - job->time + 1;
+        job->response_time = 0; //time - job->time + 1;
         curr->core = -1; //it is not running on any cores
         curr->when_preempted = time;
-        if(curr->start_time == time) {
+       /* if(curr->start_time == time) {
             curr->start_time = -1;
             curr->firsty = 0;
-        }
+        } */
         job->start_time = time;
         priqueue_offer(ugh->thing, curr); //put it back into the priority queue
         return job->core; //return the core on which job is to be run
@@ -329,8 +329,8 @@ int scheduler_job_finished(int core_id, int job_number, int time)
        if(!next->firsty) {
             next->firsty = 1;
             next->response_time = time - next->time;
-       }
-       next->start_time = time;
+        }
+        next->start_time = time;
        return next->job_number;
     }
    
