@@ -70,7 +70,7 @@ int compare1(const void * a, const void * b)
 
 //For RR. Every new entry goes to the end
 int compare5(const void * a, const void * b) {
-  return 1;
+  return -1;
 }
 
 /** 
