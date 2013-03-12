@@ -19,6 +19,7 @@ typedef struct _job_t
     int job_number;
     int priority;
     int running_time;
+    int start_time;
     int is_running;
     int time;
     int core;
@@ -156,6 +157,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->priority = priority;
   job->running_time = running_time;
   job->time = time; 
+  job->start_time = -1;
 
   job->is_running =
   job->firsty =
@@ -174,6 +176,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       ugh->corelist[i] = 1; //The core is now in use
       job->is_running = 1; //is being performed
       job->firsty = 1;
+      job->start_time = time;
       job->response_time = 0;//time - job->time + 1;
       return job->core = i; //The id of the core to which job has been assigned.
     }
@@ -208,7 +211,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             if( ((job_t *) priqueue_at(ugh->thing, index))->is_running) {
                 curr = (job_t *) priqueue_at(ugh->thing, index);
 			
-				if(lrt < (rt = curr->running_time - time + curr->response_time)) {
+				if(lrt < (rt = curr->running_time - time + curr->start_time)) {
                     lrt = rt;
                     thindex = index;
                 }
@@ -228,7 +231,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                 curr = (job_t *) priqueue_at(ugh->thing, index);
             
                 if(mpt < (pt = curr->priority)) {
-                    lrt = curr->running_time - time + curr->response_time;
+                    lrt = curr->running_time - time + curr->start_time;
                     mpt = pt;
                     thindex = index;
                 }
@@ -255,6 +258,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         job->response_time = 0;//time - job->time + 1;
         curr->core = -1; //it is not running on any cores
         curr->when_preempted = time;
+        job->start_time = time;
         priqueue_offer(ugh->thing, curr); //put it back into the priority queue
         return job->core; //return the core on which job is to be run
     }
@@ -322,6 +326,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             next->firsty = 1;
             next->response_time = time - next->time;
        }
+       next->start_time = time;
        return next->job_number;
     }
    
