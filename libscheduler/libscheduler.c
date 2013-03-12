@@ -23,6 +23,7 @@ typedef struct _job_t
     int is_running;
     int time;
     int core;
+    int const_time;
     int firsty; //1 = it has been seen before
     int response_time; //when it first got some time in a core
     int waiting_time;
@@ -159,6 +160,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->job_number = job_number;
   job->priority = priority;
   job->running_time = running_time;
+  job->const_time = time;
   job->time = time; 
   job->start_time = -1;
   job->first_time = -1;
@@ -315,7 +317,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   
   //temporal statistics are calculated only when a job is done
   ugh->total_response_time += done->response_time;
-  ugh->total_turnaround_time += time - done->time;
+  ugh->total_turnaround_time += time - done->const_time;
   ugh->total_waiting_time += done->waiting_time;
 
   free(done);
@@ -334,7 +336,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
        if(!next->firsty) {
             next->firsty = 1;
             next->first_time = time;
-            next->response_time = time - next->time;
+            next->response_time = time - next->const_time;
         }
         next->start_time = time;
        return next->job_number;
@@ -382,13 +384,13 @@ int scheduler_quantum_expired(int core_id, int time)
   
   //temporal statistics are calculated only when a job is done
   ugh->total_response_time += done->response_time;
-  ugh->total_turnaround_time += time - done->time;
+  ugh->total_turnaround_time += time - done->const_time;
   ugh->total_waiting_time += done->waiting_time;
 
   done->is_running = 0;
   done->core = -1;
   done->running_time = done->running_time - time + done->start_time;
-  done->time = time;
+  done->const_time = time;
   priqueue_offer(ugh->thing, done);
   //free(done);
             
@@ -406,7 +408,7 @@ int scheduler_quantum_expired(int core_id, int time)
        if(!next->firsty) {
             next->firsty = 1;
             next->first_time = time;
-            next->response_time = time - next->time;
+            next->response_time = time - next->const_time;
         }
         next->start_time = time;
         return next->job_number;
