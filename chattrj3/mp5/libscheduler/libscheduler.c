@@ -306,7 +306,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	   next->is_running = 1;
        if(!next->firsty) {
             next->firsty = 1;
-            next->response_time = time;
+            ugh->total_response_time += (next->response_time = time);
        }
        return next->job_number;
     }
