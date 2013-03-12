@@ -353,7 +353,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-	return 0.0;
+	return ugh->total_turnaround_time / ((float) ugh->num_jobs);
 }
 
 
