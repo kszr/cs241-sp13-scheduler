@@ -373,7 +373,7 @@ int scheduler_quantum_expired(int core_id, int time)
   ugh->corelist[core_id] = 0;
   int index;
   for(index = 0; index < priqueue_size(ugh->thing); index++) 
-    if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == job_number) {
+    if( ((job_t *) priqueue_at(ugh->thing, index))->core == core_id) {
         done = (job_t *) priqueue_at(ugh->thing, index);
         break;
     }
