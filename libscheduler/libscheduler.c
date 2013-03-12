@@ -153,7 +153,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->is_running = 0; //not being performed by default
   job->firsty = 0;
   job->response_time = 0;
-
+  job->core = -1;
+  
   priqueue_offer(ugh->thing, job); 
 
   //Look for an idle core
