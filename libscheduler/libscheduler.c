@@ -388,6 +388,7 @@ int scheduler_quantum_expired(int core_id, int time)
   done->is_running = 0;
   done->core = -1;
   done->running_time = done->running_time - time + done->start_time;
+  done->time = time;
   priqueue_offer(ugh->thing, done);
   //free(done);
             
