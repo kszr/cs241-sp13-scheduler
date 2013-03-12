@@ -253,7 +253,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         curr->is_running = 0; //remember that it is no longer running
         job->is_running = job->firsty = 1;
         job->response_time = 0;//time - job->time + 1;
-        job->when_preempted = time;
+        job->when_preempted = time + 1;
         curr->core = -1; //it is not running on any cores
         priqueue_offer(ugh->thing, curr); //put it back into the priority queue
         return job->core; //return the core on which job is to be run
