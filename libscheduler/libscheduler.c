@@ -290,7 +290,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   priqueue_remove_at(ugh->thing, index);
   
   ugh->total_response_time += done->response_time; //total response time updated only when a job is done
-  ugh->total_turnaround_time += time - done->response_time;
+  ugh->total_turnaround_time += time - done->time;
 
   free(done);
             
