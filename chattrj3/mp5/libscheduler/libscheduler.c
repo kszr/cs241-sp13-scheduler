@@ -159,7 +159,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->running_time = running_time;
   job->time = time; 
   job->start_time = -1;
-  job->fist_time = -1;
+  job->first_time = -1;
 
   job->is_running =
   job->firsty =
