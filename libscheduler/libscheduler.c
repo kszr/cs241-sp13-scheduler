@@ -324,7 +324,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
        next->waiting_time += time - next->when_preempted;
        if(!next->firsty) {
             next->firsty = 1;
-            next->response_time = time - next->time;
+            next->response_time = time - next->time + 1;
        }
        next->start_time = time;
        return next->job_number;
