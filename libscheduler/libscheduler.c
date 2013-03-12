@@ -50,7 +50,9 @@ int compare0(const void * a, const void * b)
 //The comparison function for PRI.
 int compare3(const void * a, const void * b)
 {
-  return ( ((job_t*)a)->priority - ((job_t*)b)->priority );
+  int pridiff = ( ((job_t*)a)->priority - ((job_t*)b)->priority );
+
+  return pridiff == 0 ? compare0(a, b) : pridiff;
 }
 
 //The comparison function for SJF.
