@@ -384,16 +384,17 @@ int scheduler_quantum_expired(int core_id, int time)
   priqueue_remove_at(ugh->thing, index);
   
   //temporal statistics are calculated only when a job is done
-  ugh->total_response_time += done->response_time;
+ // ugh->total_response_time += done->response_time;
   ugh->total_turnaround_time += time - done->time;
-  ugh->total_waiting_time += done->waiting_time;
+ // ugh->total_waiting_time += done->waiting_time;
 
   done->is_running = 0;
   done->core = -1;
   done->running_time = done->running_time - time + done->start_time;
+
   done->time = time;
+
   priqueue_offer(ugh->thing, done);
-  //free(done);
             
   for(index = 0; index < priqueue_size(ugh->thing); index++)
     if( !((job_t *) priqueue_at(ugh->thing, index))->is_running) {
