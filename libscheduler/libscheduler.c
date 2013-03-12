@@ -388,6 +388,7 @@ int scheduler_quantum_expired(int core_id, int time)
   ugh->total_turnaround_time += time - done->time;
  // ugh->total_waiting_time += done->waiting_time;
 
+  done->when_preempted = time;
   done->is_running = 0;
   done->core = -1;
   done->running_time = done->running_time - time + done->start_time;
