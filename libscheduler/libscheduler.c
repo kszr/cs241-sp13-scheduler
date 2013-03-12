@@ -81,7 +81,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   ugh->thing = (priqueue_t *) malloc(sizeof(priqueue_t));
   ugh->corelist = (int *) malloc(sizeof(int) * (ugh->num_cores = cores));
 
-  ugh->total_time = ugh->num_jobs = 0;
+  ugh->total_response_time = ugh->num_jobs = 0;
 
   /**
    * 0 = FCFS
