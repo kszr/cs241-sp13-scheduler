@@ -119,7 +119,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
     case PRI:
     case PPRI: priqueue_init(ugh->thing, compare3);
             break;
-    case RR: priqueue_init(ugh->thing, compare5);
+    case RR: priqueue_init(ugh->thing, compare0);
     default: break;
   }
 
