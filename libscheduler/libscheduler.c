@@ -115,7 +115,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
     case PRI:
     case PPRI: priqueue_init(ugh->thing, compare3);
             break;
-    case RR: 
+    case RR: priqueue_init(ugh->thing, compare0);
     default: break;
   }
 
@@ -361,6 +361,20 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
+    int idx;
+    for(idx = 0; idx < priqueue_size(ugh->thing); idx++) {
+        job_t *curr = (job_t *) priqueue_at(ugh->thing, idx);
+        if(curr->core == code_id) {
+            priqueue_remove_at(ugh->thing, idx);
+            curr->running_time = curr->running_time - time + curr->time;
+            curr->time = time;
+            priqueue_offer(ugh->thing, curr);
+        }
+    }
+
+    return -1;
+    }
+
 	return -1;
 }
 
