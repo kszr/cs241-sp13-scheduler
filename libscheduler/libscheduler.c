@@ -164,7 +164,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       ugh->corelist[i] = 1; //The core is now in use
       job->is_running = 1; //is being performed
       job->firsty = 1;
-      job->response_time = time - (job->time + 1); // == 0
+      job->response_time = 0;
       return job->core = i; //The id of the core to which job has been assigned.
     }
 
