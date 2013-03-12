@@ -154,7 +154,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->firsty = 0;
   job->response_time = 0;
   job->core = -1;
-  
+
   priqueue_offer(ugh->thing, job); 
 
   //Look for an idle core
@@ -204,6 +204,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
                 }
 		    }
     }
+    /**
+     * PREEMPTIVE PRIORITY THING:
+     * Similar to PSJF, except the basis for preemption is priority.
+     */
     else if(ugh->sch == PPRI) {
         /**
          * Finding the largest priority number or lowest priority of a running job 
