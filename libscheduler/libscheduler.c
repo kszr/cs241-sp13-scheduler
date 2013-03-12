@@ -151,6 +151,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->time = time; 
   job->is_running = 0; //not being performed by default
   job->firsty = 0;
+  job->response_time = 0;
 
   priqueue_offer(ugh->thing, job); 
 
@@ -234,11 +235,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
         curr->running_time = lrt; //change its running time to be the remaining time
         curr->is_running = 0; //remember that it is no longer running
-        job->is_running = 1;
-        if(!job->firsty) {
-            job->firsty = 1;
-            job->response_time = time;
-        }
+        job->is_running = job->firsty = 1;
+        job->response_time = time;
         curr->core = -1; //it is not running on any cores
         priqueue_offer(ugh->thing, curr); //put it back into the priority queue
         return job->core; //return the core on which job is to be run
