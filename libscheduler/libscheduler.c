@@ -22,7 +22,7 @@ typedef struct _job_t
     int is_running;
     int time;
     int core;
-    int pre_jobn;
+    int firsty; //1 = it has been seen before
     int response_time; //when it first got some time in a core
 } job_t;
 
@@ -35,7 +35,7 @@ typedef struct _details_t {
   scheme_t sch;
   priqueue_t *thing;
   int num_cores;
-  int total_time; //stats
+  int total_response_time;
   int num_jobs; //stats
 } details_t;
 
@@ -61,31 +61,6 @@ int compare1(const void * a, const void * b)
   return ( ((job_t*)a)->running_time - ((job_t*)b)->running_time );
 }
 
-/**
- * Finds the entry with the maximum value of an attribute 
- * determined by the comparer function passed into it.
- */ /*
-ministruct_t * max(priqueue_t *q, const void *a, const void *b, 
-        int(*comparer)(const void *, const void *) {
-    
-    job_t *sofar = priqueue_peek(q); //the head
-
-    int index;
-
-    for(index = 0; index < priqueue_size(q); index++)
-        ;
-    for(index = 0; index < priqueue_size(q); index++)
-        if( ((job_t *) priqueue_at(index))->is_running)
-            if(comparer((void *) sofar, (void *) priqueue_at(index)) < 0)
-                sofar = priqueue_at(thindex = index);
-    
-    ministruct_t roofus;
-    roofus->maxest = sofar;
-    roofus->thindex = thindex;
-
-    return &roofus;           
-}
-*/
 /** 
   Initalizes the scheduler.
  
@@ -175,7 +150,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   job->running_time = running_time;
   job->time = time; 
   job->is_running = 0; //not being performed by default
-  //job->pre_jobn = -1; //it hasn't preempted anything yet
+  job->firsty = 0;
 
   priqueue_offer(ugh->thing, job); 
 
@@ -185,6 +160,8 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     if(!ugh->corelist[i]) {
       ugh->corelist[i] = 1; //The core is now in use
       job->is_running = 1; //is being performed
+      job->firsty = 1;
+      job->response_time = time;
       return job->core = i; //The id of the core to which job has been assigned.
     }
 
@@ -253,7 +230,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     if( (ugh->sch == PSJF && job->running_time < lrt) ||
         (ugh->sch == PPRI && job->priority < mpt) ) {
         job->core = curr->core; //assign job to run on the preempted job's core
-        //job->pre_jobn = curr->job_number; //remember which job the new job preempted
         priqueue_remove_at(ugh->thing, thindex); //remove curr from the queue in order to fix its stats
         curr->running_time = lrt; //change its running time to be the remaining time
         curr->is_running = 0; //remember that it is no longer running
@@ -304,7 +280,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             
   priqueue_remove_at(ugh->thing, index);
   
-  ugh->total_time += done->time; //total time updated only when a job is done
+  ugh->total_response_time += done->response_time; //total time updated only when a job is done
  
   free(done);
             
@@ -318,6 +294,10 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	   next->core = core_id;
 	   ugh->corelist[core_id] = 1;
 	   next->is_running = 1;
+       if(!next->firsty) {
+            next->firsty = 1;
+            next->response_time = time;
+       }
        return next->job_number;
     }
    
@@ -381,7 +361,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-	return 0.0;
+	return ugh->total_response_time / ( (float) ugh->num_jobs);
 }
 
 
