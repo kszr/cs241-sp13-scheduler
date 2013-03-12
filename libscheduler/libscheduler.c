@@ -164,7 +164,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       ugh->corelist[i] = 1; //The core is now in use
       job->is_running = 1; //is being performed
       job->firsty = 1;
-      ugh->total_response_time += (job->response_time = time);
+      job->response_time = time - (job->time + 1); // == 0
       return job->core = i; //The id of the core to which job has been assigned.
     }
 
@@ -242,7 +242,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
         curr->running_time = lrt; //change its running time to be the remaining time
         curr->is_running = 0; //remember that it is no longer running
         job->is_running = job->firsty = 1;
-        ugh->total_response_time += (job->response_time = time);
+        job->response_time = time - (job->time + 1);
         curr->core = -1; //it is not running on any cores
         priqueue_offer(ugh->thing, curr); //put it back into the priority queue
         return job->core; //return the core on which job is to be run
@@ -289,7 +289,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             
   priqueue_remove_at(ugh->thing, index);
   
-  //ugh->total_response_time += done->response_time; //total response time updated only when a job is done
+  ugh->total_response_time += done->response_time; //total response time updated only when a job is done
   ugh->total_turnaround_time += time - done->response_time;
 
   free(done);
@@ -306,7 +306,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
 	   next->is_running = 1;
        if(!next->firsty) {
             next->firsty = 1;
-            ugh->total_response_time += (next->response_time = time);
+            next->response_time = time - (next->time + 1);
        }
        return next->job_number;
     }
@@ -358,7 +358,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-	return ((float) ugh->total_turnaround_time) / ((float) ugh->num_jobs);
+	return ugh->total_turnaround_time / ((float) ugh->num_jobs);
 }
 
 
