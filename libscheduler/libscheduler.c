@@ -378,7 +378,10 @@ float scheduler_average_response_time()
 */
 void scheduler_clean_up()
 {
-
+    priqueue_destroy(ugh->thing);
+    free(ugh->thing);
+    free(ugh->corelist);
+    free(ugh);
 }
 
 
