@@ -186,7 +186,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
       return job->core = i; //The id of the core to which job has been assigned.
     }
 
-    if(ugh->sch/3 + ugh->sch%3 < 2) return -1; //returns if nonpreemptive
+    if(ugh->sch/3 + ugh->sch%3 < 2 || ugh->sch == RR) return -1; //returns if nonpreemptive or RR
   
 	/**
      * If there be no idle cores, use the power of preemption.
@@ -361,8 +361,59 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
+/**
+   * The current assumption is that this function works similarly for
+   * every scheme. Preemption occurs when a new job arrives.
+   */
 
-	return -1;
+  job_t *done; //the finished job
+  job_t *next = NULL;
+  
+  //The core is now idle
+  ugh->corelist[core_id] = 0;
+  int index;
+  for(index = 0; index < priqueue_size(ugh->thing); index++) 
+    if( ((job_t *) priqueue_at(ugh->thing, index))->job_number == job_number) {
+        done = (job_t *) priqueue_at(ugh->thing, index);
+        break;
+    }
+            
+  priqueue_remove_at(ugh->thing, index);
+  
+  //temporal statistics are calculated only when a job is done
+  ugh->total_response_time += done->response_time;
+  ugh->total_turnaround_time += time - done->time;
+  ugh->total_waiting_time += done->waiting_time;
+
+  done->is_running = 0;
+  done->core = -1;
+  done->running_time = done->running_time - time + done->start_time;
+  priqueue_offer(ugh->thing, done);
+  //free(done);
+            
+  for(index = 0; index < priqueue_size(ugh->thing); index++)
+    if( !((job_t *) priqueue_at(ugh->thing, index))->is_running) {
+        next = (job_t *) priqueue_at(ugh->thing, index);
+        break;
+    }
+          
+    if(next) {
+       next->core = core_id;
+       ugh->corelist[core_id] = 1;
+       next->is_running = 1;
+       next->waiting_time += time - next->when_preempted;
+       if(!next->firsty) {
+            next->firsty = 1;
+            next->first_time = time;
+            next->response_time = time - next->time;
+        }
+        next->start_time = time;
+        return next->job_number;
+    }
+   
+    //The core should remain idle, such as for instance when the queue is empty.
+    
+    return -1;
 }
 
 
