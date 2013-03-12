@@ -36,6 +36,7 @@ typedef struct _details_t {
   priqueue_t *thing;
   int num_cores;
   int total_response_time;
+  int total_turnaround_time;
   int num_jobs; //stats
 } details_t;
 
@@ -81,7 +82,7 @@ void scheduler_start_up(int cores, scheme_t scheme)
   ugh->thing = (priqueue_t *) malloc(sizeof(priqueue_t));
   ugh->corelist = (int *) malloc(sizeof(int) * (ugh->num_cores = cores));
 
-  ugh->total_response_time = ugh->num_jobs = 0;
+  ugh->total_response_time = ugh->total_turnaround_time = ugh->num_jobs = 0;
 
   /**
    * 0 = FCFS
@@ -283,8 +284,9 @@ int scheduler_job_finished(int core_id, int job_number, int time)
             
   priqueue_remove_at(ugh->thing, index);
   
-  ugh->total_response_time += done->response_time; //total time updated only when a job is done
- 
+  ugh->total_response_time += done->response_time; //total response time updated only when a job is done
+  ugh->total_turnaround_time += time - done->response_time;
+
   free(done);
             
   for(index = 0; index < priqueue_size(ugh->thing); index++)
