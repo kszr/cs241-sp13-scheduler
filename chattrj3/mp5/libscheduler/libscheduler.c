@@ -335,7 +335,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return ugh->total_time / ( (float) ugh->num_jobs);
+	return 0.0;
 }
 
 
