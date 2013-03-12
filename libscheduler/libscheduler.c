@@ -235,7 +235,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
             if( ((job_t *) priqueue_at(ugh->thing, index))->is_running) {
                 curr = (job_t *) priqueue_at(ugh->thing, index);
             
-                if(mpt < (pt = curr->priority)) {
+                if(mpt <= (pt = curr->priority)) {
                     lrt = curr->running_time - time + curr->start_time;
                     mpt = pt;
                     thindex = index;
